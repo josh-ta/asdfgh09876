@@ -2,6 +2,9 @@ from bs4 import BeautifulSoup
 from seleniumbase import SB
 import random
 from urllib.parse import urlparse
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class DropCH:
@@ -30,7 +33,20 @@ class DropCH:
     def run(self):
         with SB(uc=True, ad_block=True, headless=True) as sb:
             sb.activate_cdp_mode(self.url)
-            sb.wait_for_element("#map-container > div > div > svg")
+
+            try:
+                sb.wait_for_element('abuse-component[action="block"]', timeout=2)
+                logging.warning(f"[BLOCKED] {self.url} - Detected abuse-component block")
+                return
+            except:
+                pass
+            
+            try:
+                sb.wait_for_element("#map-container > div > div > svg", timeout=10)
+            except:
+                logging.warning(f"[TIMEOUT] {self.url} - SVG element not found after timeout")
+                return
+            
             sb.sleep(random.uniform(0.5,0.9))
             
             try:
@@ -40,7 +56,7 @@ class DropCH:
                 pass
             
             sb.sleep(random.uniform(0.5,0.9))
-
+            
             html = sb.get_html()
             sections = self.extract_availability(html)
             if sections:
