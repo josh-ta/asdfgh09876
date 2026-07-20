@@ -208,3 +208,6 @@ __marimo__/
 
 
 # Project Specific Ignores
+
+# Local generated and sensitive artifacts
+.DS_Store
